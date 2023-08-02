@@ -75,7 +75,7 @@
 		<hr/>
 
 		<h2>SOP *does* apply to iframes (with very few exceptions)...:</h2>
-		<iframe src="http://same-origin-policy.com/test.html" id="test_iframe" width="700px" onload="
+		<iframe src="http://same-origin-policy.com/test.html" id="test_iframe" width="700px" height="200px" onload="
 			test_iframe_src.innerText = 'test_iframe.src: ' + test_iframe.src;
 			test_iframe_contentWindow_length.innerText = 'test_iframe.contentWindow.length (the number of frames being used on the page): ' + test_iframe.contentWindow.length;
 			try {
@@ -100,7 +100,7 @@
 		<hr/>
 
 		<h2>...unless the iframe has the same origin:</h2>
-		<iframe src="other.html" id="self_iframe" width="700px" onload="
+		<iframe src="other.html" id="self_iframe" width="700px" height="200px" onload="
 			self_iframe_src.innerText = 'self_iframe.src: ' + self_iframe.src;
 			self_iframe_contentWindow_length.innerText = 'self_iframe.contentWindow.length (the number of frames being used on the page): ' + self_iframe.contentWindow.length;
 			self_iframe_contentWindow_name.innerText = 'self_iframe.contentWindow.name: ' + self_iframe.contentWindow.name;
@@ -207,7 +207,7 @@
 		<hr/>
 
 		<h2>Try out Cross-document messaging using <tt>postMessage()</tt>:</h2>
-		<iframe src="http://same-origin-policy.com/post_message_partner.html" id="post_message_partner_iframe" width="700px"></iframe><br/>
+		<iframe src="http://same-origin-policy.com/post_message_partner.html" id="post_message_partner_iframe" width="700px" height="200px"></iframe><br/>
 		Send message: <input type="text" id="send_message" /><input type="button" value="Post message!" onclick="
 			post_message_partner_iframe.contentWindow.postMessage(send_message.value, '*')
 		" /><br/>
