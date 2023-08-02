@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Another page on same-origin-policy.info</title>
+	</head>
+	<body>
+		<h2>Another page on same-origin-policy.info</h2>
+		<p>
+			This is: <span id="window_location"></span><br/>
+			<span id="framing_info"></span>
+		</p>
+		<p>
+			This is <b>not</b> secret!
+		</p>
+		<script>
+			window_location.innerText = window.location;
+
+			if (self != top) { // cf. https://en.wikipedia.org/wiki/Framekiller
+				framing_info.innerText = "I know I'm being framed!";
+			} else {
+				framing_info.innerText = "I'm not being framed!";
+			}
+		</script>
+		<script>
+			
+			document.write("window.name: " + window.name + "<br/>");
+		</script>
+	</body>
+</html>

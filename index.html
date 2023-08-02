@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Same-Origin Policy</title>
+		<link rel="stylesheet" href="http://same-origin-policy.com/test.css" />
+		<style>
+			.footer {
+				position: fixed;
+				left: 0;
+				bottom: 0;
+				width: 100%;
+				background-color: #eeeeee;
+				color: black;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+
+		<h1>Same-Origin Policy (SOP)</h1>
+
+		<hr/>
+
+		<h2>What does the Same Origin Policy enforce?</h2>
+		    <p>
+				<b>TL;DR</b> The Same Origin Policy (SOP) enforces that websites from different <i>origins</i> cannot access each other's content.
+			</p>
+			<p>
+				<i></i>
+				A good explanaition of the SOP by <i>Eric Portis</i> can be found <a href="https://css-tricks.com/i-learned-to-love-the-same-origin-policy/">here</a>; in short:<br/>
+				<ul>
+					<li>The concept of origins is the fundamental security/privacy boundary of the web.</li>
+					<li>Two sites or ressources that share an origin can interact with each other however they like.</li>
+					<li>Two sites that have a <i>different</i> origin can still interact with each other in certain ways (writing cross-origin using POST forms, embedding cross-origin ressources using iframes or image tags), but what they <i>cannot</i> do is <b>read</b> cross-origin (unless specially-granted permission via CORS, see below).</li>
+					<li>Why is reading not allowed? Because everyone sees a different WWW (e.g. when you're logged in into Facebook) "and a website shouldn’t be able to see the rest of the web through its visitors’ eyes".</li>
+				</ul>
+			</p>
+
+		<hr/>
+
+		<h2>How is the <i>origin</i> defined?</h2>
+
+		The origin is defined as the triplet of...
+		<ul>
+			<li>protocol (e.g. "http" or "https"),</li>
+			<li>hostname (including subdomain, i.e. "example.com" and "www.example.com" are considered <i>different</i> origins) and</li>
+			<li>port (usually 80 for HTTP or 443 for HTTPS).</li>
+		</ul>
+
+		<hr/>
+
+		<h2>SOP does *not* apply to scripts loaded via the &lt;script&gt; tag, they're expected to be static:</h2>
+		<script src="http://same-origin-policy.com/test.js"></script> <!-- Attention!: <script src="http://same-origin-policy.com/test.js" /> doesn't work! -->
+		<p>
+			<script>
+				document.write("super_secret_value_in_test_js: " + super_secret_value_in_test_js + "<br/>");
+				document.write("super_secret_function.toString(): " + super_secret_function.toString().replaceAll('\n','').replaceAll('\t', '').substring(0,100) + "<br/>");
+			</script>
+		</p>
+		This is what we call <b>Cross-Site Scripting Inclusion (XSSI)!</b><br/>
+		<i>You may find the script <a href="http://same-origin-policy.com/test.js">here on same-origin-policy<b>.com</b></a>.</i>
+
+		<hr/>
+
+		<h2>Neither does it apply to embedded stylesheets (in case you wondered):</h2>
+		<p>
+			<script>
+				document.write("--secret-custom-property1: " + getComputedStyle(document.body).getPropertyValue("--secret-custom-property1") + "<br/>");
+				document.write("--secret-custom-property2: " + getComputedStyle(document.body).getPropertyValue("--secret-custom-property2") + "<br/>");
+			</script>
+		</p>
+		<i>You may find the stylesheet <a href="http://same-origin-policy.com/test.css">here on same-origin-policy<b>.com</b></a>.</i>
+
+		<hr/>
+
+		<h2>SOP *does* apply to iframes (with very few exceptions)...:</h2>
+		<iframe src="http://same-origin-policy.com/test.html" id="test_iframe" width="700px" onload="
+			test_iframe_src.innerText = 'test_iframe.src: ' + test_iframe.src;
+			test_iframe_contentWindow_length.innerText = 'test_iframe.contentWindow.length (the number of frames being used on the page): ' + test_iframe.contentWindow.length;
+			try {
+				test_iframe_contentWindow_name.innerText = 'test_iframe.contentWindow.name: ' + test_iframe.contentWindow.name;
+			} catch (error) {
+				test_iframe_contentWindow_name.innerText = 'test_iframe.contentWindow.name: &lt;error: ' + error + '&gt;';
+			}
+			try {
+				test_iframe_contentWindow_document_documentElement_outerHTML.innerText = 'test_iframe.contentWindow.document.documentElement.outerHTML: ' + test_iframe.contentWindow.document.documentElement.outerHTML.replaceAll('\n','').replaceAll('\t', '').substring(0,100);
+			} catch (error) {
+				test_iframe_contentWindow_document_documentElement_outerHTML.innerText = 'test_iframe.contentWindow.document.documentElement.outerHTML: &lt;error: ' + error + '&gt;';
+			}
+		"></iframe><br/>
+		<span id="test_iframe_src"></span><br/>
+		<span id="test_iframe_contentWindow_length"></span><br/> <!-- cf. https://portswigger.net/web-security/cors/same-origin-policy -->
+		<span id="test_iframe_contentWindow_name"></span><br/>
+		<span id="test_iframe_contentWindow_document_documentElement_outerHTML"></span><br/>
+		<input type="button" value="Retrieve test_iframe.contentWindow.name by navigating iframe to about:blank!" onclick="test_iframe.src='about:blank'" /> <!-- https://stackoverflow.com/questions/19487729/cross-domain-using-window-name-double-onload-should-be-used -->
+		<br/>
+		<i>Exceptions to the SOP:</i> <tt>contentWindow.length, postMessage(), contentWindow.name</tt> (see by clicking the button above)
+
+		<hr/>
+
+		<h2>...unless the iframe has the same origin:</h2>
+		<iframe src="other.html" id="self_iframe" width="700px" onload="
+			self_iframe_src.innerText = 'self_iframe.src: ' + self_iframe.src;
+			self_iframe_contentWindow_length.innerText = 'self_iframe.contentWindow.length (the number of frames being used on the page): ' + self_iframe.contentWindow.length;
+			self_iframe_contentWindow_name.innerText = 'self_iframe.contentWindow.name: ' + self_iframe.contentWindow.name;
+			self_iframe_contentWindow_document_documentElement_outerHTML.innerText = 'self_iframe.contentWindow.document.documentElement.outerHTML: ' + self_iframe.contentWindow.document.documentElement.outerHTML.replaceAll('\n','').replaceAll('\t', '').substring(0,100);
+		"></iframe><br/>
+		<span id="self_iframe_src"></span><br/>
+		<span id="self_iframe_contentWindow_length"></span><br/> <!-- cf. https://portswigger.net/web-security/cors/same-origin-policy -->
+		<span id="self_iframe_contentWindow_name"></span><br/>
+		<span id="self_iframe_contentWindow_document_documentElement_outerHTML"></span><br/>
+
+		<hr/>
+
+		<h2>SOP also applies to XMLHttpRequests:</h2>
+		<span id="xmlhttprequest_get_test_html"></span><br/>
+		<span id="xmlhttprequest_get_does_not_exist_html"></span><br/>
+		<span id="xmlhttprequest_get_self"></span><br/>
+		<span id="xmlhttprequest_get_other"></span><br/>
+		<script>
+			function xml_http(method, url, output) {
+				// from https://de.wikipedia.org/wiki/XMLHttpRequest#Codebeispiele_(JavaScript):
+				var xmlHttp = null;
+				try {
+				    xmlHttp = new XMLHttpRequest();
+				} catch(e) {
+				    output.innerText = "XMLHttpRequest " + method + " " + url + " failed: &lt;error: " + e + "&gt;";
+				}
+				if (xmlHttp) {
+				    xmlHttp.open(method, url, true); // async=true
+				    xmlHttp.onreadystatechange = function () {
+				        if (xmlHttp.readyState == 4) {
+				            output.innerText = "XMLHttpRequest " + method + " " + url + " returned status " + xmlHttp.status + ": " + xmlHttp.responseText.replaceAll('\n','').replaceAll('\t', '').substring(0,100);
+				        }
+				    };
+				    xmlHttp.send(null);
+				}
+			}
+			xml_http('GET', 'http://same-origin-policy.com/test.html', xmlhttprequest_get_test_html);
+			xml_http('GET', 'http://same-origin-policy.com/does_not_exist.html', xmlhttprequest_get_does_not_exist_html);
+			xml_http('GET', 'index.html', xmlhttprequest_get_self);
+			xml_http('GET', 'other.html', xmlhttprequest_get_other);
+		</script>
+		<br/>
+		<i>We see that we can't even tell the difference between an existing and a non-existing webpage when the SOP does not allow us to read their contents!</i><br/>
+		<br/>
+
+		<b>Beware: *Writing* across origins is still possible by sending GET/POST requests! This opens up the possibility for CSRF attacks!</b><br/>
+		Possible fixes for CSRF are:<br/>
+		<ol>
+			<li>Use <b>CSRF tokens/nonces</b> that are randomly generated by the server for each user and placed in all forms</li>
+			<li><b>Double Submit Cookie:</b> require value in posted content to match value of certain cookie (advantage: no server-side state required, just compare submitted form value against cookie; disadvantage: insecure when an attacker can control a sub-domain!)</li>
+			<li>Attach a <b>custom headers (like 'X-CSRF-Free')</b> to your XMLHttpRequests. This works because cross-domain requests with custom headers require pre-flight CORS requests!</li>
+			<li><b>Same-Site Cookies:</b><br/>
+				<i>Strict:</i> never send cookies with cross-origin request (if facebook.com set that, every user following a link there would not be logged in!)<br/>
+				<i>Lax Mode (default in Chrome since 2021):</i> cookies only send along with safe requests (GET, HEAD, OPTIONS, TRACE) => protects against POST-based CSRF, not against GET-based though<br/>
+				Examples:<br/>
+				<tt>Set-Cookie: key=value; SameSite=Strict</tt><br/>
+				<tt>Set-Cookie: key=value; SameSite=Lax</tt><br/>
+				<tt>Set-Cookie: key=value; SameSite=None</tt><br/>
+			</li>
+		</ol>
+
+		<hr/>
+
+		<h2>SOP sort of partly applies to images, we can find out whether an image exists and its size but no more:</h2>
+		<img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" id="google_logo" height="50px"
+		 onload="google_logo_info.innerText = 'google_logo: ' + google_logo.naturalWidth + ' x ' + google_logo.naturalHeight"
+		 onerror="google_logo_info.innerText = 'google_logo: &lt;error&gt;'" /><br/>
+		<img src="https://www.example.com/does_not_exist.jpg" id="non_existing_image"
+		 onload="non_existing_image_info.innerText = 'non_existing_image: ' + non_existing_image.naturalWidth + ' x ' + non_existing_image.naturalHeight"
+		 onerror="non_existing_image_info.innerText = 'non_existing_image: &lt;error&gt;'" /><br/>
+		<span id="google_logo_info"></span><br/>
+		<span id="non_existing_image_info"></span><br/>
+
+		<hr/>
+
+		<h2>Deliberately bypassing the Same Origin Policy:</h2>
+		Sometimes, one wants to <b>deliberately bypass the SOP</b> and communicate cross-origin in mutual consent; there are multiple ways of achieving that (<a href="https://en.wikipedia.org/wiki/Same-origin_policy#Relaxing_the_same-origin_policy">Wikipedia</a> does a good job at listing and summarizing them):
+		<ul>
+			<li><span style="color:red"><tt>window.name</tt></span> (an old-fashioned ugly work-around, see by clicking the button above)</li>
+			<li><b>Domain Relaxation</b> by setting <b><tt>document.domain</tt></b> to the same value:<br/>
+				<cite>
+					If two windows (or frames) contain scripts that set domain to the same value, the same-origin policy is relaxed for these two windows, and each window can interact with the other. For example, cooperating scripts in documents loaded from orders.example.com and catalog.example.com might set their document.domain properties to “example.com”, thereby making the documents appear to have the same origin and enabling each document to read properties of the other. Setting this property implicitly sets the port to null, which most browsers will interpret differently from port 80 or even an unspecified port. To assure that access will be allowed by the browser, set the document.domain property of both pages.
+				</cite>
+			</li>
+			<li><b>Cross-Origin Resource Sharing (<span style="color:green">CORS</span>):</b><br/>
+				<cite>
+					This standard extends HTTP with a new Origin request header and a new Access-Control-Allow-Origin response header. It allows servers to use a header to explicitly list origins that may request a file or to use a wildcard and allow a file to be requested by any site.
+				</cite>
+			</li>
+			<li><b>Cross-document messaging</b> using the <b><tt>postMessage()</tt></b> method:<br/>
+				<cite>
+					[C]ross-document messaging allows a script from one page to pass textual messages to a script on another page regardless of the script origins. Calling the postMessage() method on a Window object asynchronously fires an "onmessage" event in that window, triggering any user-defined event handlers. A script in one page still cannot directly access methods or variables in the other page, but they can communicate safely through this message-passing technique. 
+				</cite>
+			</li>
+			<li><b><span style="color:red">JSONP</span> (JSON with Padding):</b><br/>
+				This "historical" technique is essentially "XSSI on purpose":<br/>
+				<cite>
+					Since HTML <tt>&lt;script&gt;</tt> elements are allowed to retrieve and execute content from other domains, a page can bypass the same-origin policy and receive JSON data from a different domain by loading a resource that returns a JSONP payload. JSONP payloads consist of an internal JSON payload wrapped by a pre-defined function call [the padding "P" in "JSONP"]. When the script resource is loaded by the browser, the designated callback function will be invoked to process the wrapped JSON payload. 
+				</cite><br/>
+				<span style="color:red">DANGER:</span> JSONP fetches and executes arbitrary JavaScript code. This opens up an XSS vector when an attacker takes control over the site that provides the JSONP API! <!-- Source: https://www.mediawiki.org/wiki/Manual:CORS#Alternatives -->
+			</li>
+		</ul>
+
+		<hr/>
+
+		<h2>Try out Cross-document messaging using <tt>postMessage()</tt>:</h2>
+		<iframe src="http://same-origin-policy.com/post_message_partner.html" id="post_message_partner_iframe" width="700px"></iframe><br/>
+		Send message: <input type="text" id="send_message" /><input type="button" value="Post message!" onclick="
+			post_message_partner_iframe.contentWindow.postMessage(send_message.value, '*')
+		" /><br/>
+		Received messages:<br/>
+		<span id="received_messages"></span>
+		<script>
+			// cf. https://en.wikipedia.org/wiki/Web_Messaging#Example:
+			function receiver(event) {
+				received_messages.innerHTML += "'" + event.origin + "' sent: '" + event.data + "'<br/>"
+			}
+			window.addEventListener('message', receiver, false); //useCapture=false, see https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+		</script>
+
+		<hr/>
+
+		<h2>See <span style="color:red">JSONP</span> in action with the MediaWiki/Wikipedia API:</h2>
+		<p>
+			On this site:<br/>
+			<tt>&lt;script src="https://en.wikipedia.org/w/api.php?action=query&amp;list=random&amp;rnlimit=3&amp;format=json&amp;callback=jsonp_callback"&gt;&lt;/script&gt;</tt>
+		</p>
+		<p>
+			The script included looks somewhat like this: <tt>/**/jsonp_callback({ /* ... */ })</tt>
+		</p>
+		<p>
+			Also on this site:<br/>
+			<tt>&lt;script&gt;var jsonp_callback = function (response) { /* ... */ }&lt;/script&gt;</tt>
+		</p>
+		<p>
+			Result (populated by the <tt>jsonp_callback</tt> function defined on this site):
+		</p>
+		<p>
+			<span id="jsonp_result"></span>
+		</p>
+		<p>
+			<i>(adapted from <a href="https://www.mediawiki.org/wiki/API:Cross-site_requests#JSONP_usage">here</a>)</i>
+		</p>
+		<script>
+			/**
+			 * The function to wrap the result
+			 */
+			var jsonp_callback = function (response) {
+			    var pages = response.query.random; // Process the output to get the titles
+			    jsonp_result.innerHTML = ""
+			    Object.keys(pages).forEach(function(key) {
+			        jsonp_result.innerHTML += pages[key].title + "<br/>"; //console.log(pages[key].title);
+			    });
+			};
+		</script>
+		<script src="https://en.wikipedia.org/w/api.php?action=query&amp;list=random&amp;rnlimit=3&amp;format=json&amp;callback=jsonp_callback"></script>
+		<!-- example respone: /**/jsonp_callback({"batchcomplete":"","continue":{"rncontinue":"0.263576693472|0.26357675623|52792327|0","continue":"-||"},"query":{"random":[{"id":25485013,"ns":0,"title":"Oboe Concerto No. 1 (Handel)"},{"id":10274813,"ns":1,"title":"Talk:John Sydenham"},{"id":68571374,"ns":0,"title":"2021\u201322 DHB-Pokal"}]}}) -->
+
+		<hr/>
+
+		<h2>See <span style="color:green">CORS</span> in action:</h2>
+		<p>
+			<a href="http://same-origin-policy.com/cors_example.php"><tt>http://same-origin-policy.com/cors_example.php</tt></a> is a useful site that responds with the <tt>Access-Control-Allow-Origin: *</tt> HTTP response header.<br/>
+			It can also respond with another value for the <tt>Access-Control-Allow-Origin</tt> header when setting a specific GET parameter, see below.
+		</p>
+		<p>
+			We can read the result of sending an XMLHttpRequest GET request to <tt>http://same-origin-policy.com/cors_example.php</tt> because the <tt>Access-Control-Allow-Origin: *</tt> header is being received:<br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<span id="cors_example_result1" style="color:brown"></span>
+		</p>
+		<p>
+			And these are all the response headers received (<tt>xmlHttp.getAllResponseHeaders()</tt>); we can read <i>those</i> because <tt>Access-Control-Expose-Headers: *</tt> is also set:<br/>
+			<span id="cors_example_result1_headers" style="color:brown"></span>
+		</p>
+		<p>
+			Receiving <tt>Access-Control-Allow-Origin: http://same-origin-policy.info</tt> instead of <tt>Access-Control-Allow-Origin: *</tt> should also work:<br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<span id="cors_example_result2" style="color:brown"></span>
+		</p>
+		<p>
+			However, when receiving <tt>Access-Control-Allow-Origin: http://some-other-site.com</tt> in the response, the browser blocks access for us:<br/>
+			&nbsp;&nbsp;&nbsp;&nbsp;<span id="cors_example_result3" style="color:brown"></span>
+		</p>
+		<p>
+			Note: Feel free to play around with <a href="http://same-origin-policy.com/cors_example.php"><tt>http://same-origin-policy.com/cors_example.php</tt></a> and <tt>http://same-origin-policy.com/cors_example.php?access_control_allow_origin=...</tt> yourself!
+		</p>
+		<script>
+			function xml_http2(method, url, output, output_headers) {
+				// adapted from https://de.wikipedia.org/wiki/XMLHttpRequest#Codebeispiele_(JavaScript):
+				var xmlHttp = null;
+				try {
+				    xmlHttp = new XMLHttpRequest();
+				} catch(e) {
+					if (output != null) {
+				    	output.innerText = "XMLHttpRequest " + method + " " + url + " failed: &lt;error: " + e + "&gt;";
+					}
+				}
+				if (xmlHttp) {
+				    xmlHttp.open(method, url, true); // async=true
+				    xmlHttp.onreadystatechange = function () {
+				        if (xmlHttp.readyState == 4) {
+				        	if (output != null) {
+				            	output.innerText = "XMLHttpRequest " + method + " " + url + " returned status " + xmlHttp.status + ": " + xmlHttp.responseText.replaceAll('\n','').replaceAll('\t', '').substring(0,100);
+				        	}
+				        	if (output_headers != null) {
+				            	output_headers.innerText = xmlHttp.getAllResponseHeaders();
+				        	}
+
+				        }
+				    };
+				    xmlHttp.send(null);
+				}
+			}
+
+			xml_http('GET', 'http://same-origin-policy.com/cors_example.php', cors_example_result1, cors_example_result1_headers);
+			xml_http('GET', 'http://same-origin-policy.com/cors_example.php?access_control_allow_origin=http%3A%2F%2Fsame-origin-policy.info', cors_example_result2, null);
+			xml_http('GET', 'http://same-origin-policy.com/cors_example.php?access_control_allow_origin=http%3A%2F%2Fsome-other-site.com', cors_example_result3, null);
+		</script>
+
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<div class="footer" style="font-family:Arial,Helvetica,sans-serif;">
+  			<p>© 2023 Kendrick Grünberg | <a href="https://github.com/k-gruenberg/same-origin-policy.info">View source code</a> | See also: <a href="http://content-security-policy.info/">content-security-policy.info</a></p>
+		</div>
+
+	</body>
+</html>
