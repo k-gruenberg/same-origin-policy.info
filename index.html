@@ -313,9 +313,9 @@
 				}
 			}
 
-			xml_http('GET', 'http://same-origin-policy.com/cors_example.php', cors_example_result1, cors_example_result1_headers);
-			xml_http('GET', 'http://same-origin-policy.com/cors_example.php?access_control_allow_origin=http%3A%2F%2Fsame-origin-policy.info', cors_example_result2, null);
-			xml_http('GET', 'http://same-origin-policy.com/cors_example.php?access_control_allow_origin=http%3A%2F%2Fsome-other-site.com', cors_example_result3, null);
+			xml_http2('GET', 'http://same-origin-policy.com/cors_example.php', cors_example_result1, cors_example_result1_headers);
+			xml_http2('GET', 'http://same-origin-policy.com/cors_example.php?access_control_allow_origin=http%3A%2F%2Fsame-origin-policy.info', cors_example_result2, null);
+			xml_http2('GET', 'http://same-origin-policy.com/cors_example.php?access_control_allow_origin=http%3A%2F%2Fsome-other-site.com', cors_example_result3, null);
 		</script>
 
 		<br/>
