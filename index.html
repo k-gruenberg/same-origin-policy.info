@@ -206,6 +206,30 @@
 
 		<hr/>
 
+		<h2>Try out Domain Relaxation:</h2>
+		<iframe src="http://sub.same-origin-policy.info/" id="sub_iframe" width="700px" height="200px" onload="retry_button.click()"></iframe><br/>
+		<span id="sub_iframe_src"></span><br/>
+		<span id="sub_iframe_contentWindow_length"></span><br/> <!-- cf. https://portswigger.net/web-security/cors/same-origin-policy -->
+		<span id="sub_iframe_contentWindow_name"></span><br/>
+		<span id="sub_iframe_contentWindow_document_documentElement_outerHTML"></span><br/>
+		<input type="button" value="Relax: document.domain = 'same-origin-policy.info'" onclick="document.domain = 'same-origin-policy.info'" /><br/>
+		<input type="button" value="Retry!" id="retry_button" onclick="
+			sub_iframe_src.innerText = 'sub_iframe.src: ' + sub_iframe.src;
+			sub_iframe_contentWindow_length.innerText = 'sub_iframe.contentWindow.length (the number of frames being used on the page): ' + sub_iframe.contentWindow.length;
+			try {
+				sub_iframe_contentWindow_name.innerText = 'sub_iframe.contentWindow.name: ' + sub_iframe.contentWindow.name;
+			} catch (error) {
+				sub_iframe_contentWindow_name.innerText = 'sub_iframe.contentWindow.name: &lt;error: ' + error + '&gt;';
+			}
+			try {
+				sub_iframe_contentWindow_document_documentElement_outerHTML.innerText = 'sub_iframe.contentWindow.document.documentElement.outerHTML: ' + sub_iframe.contentWindow.document.documentElement.outerHTML.replaceAll('\n','').replaceAll('\t', '').substring(0,100);
+			} catch (error) {
+				sub_iframe_contentWindow_document_documentElement_outerHTML.innerText = 'sub_iframe.contentWindow.document.documentElement.outerHTML: &lt;error: ' + error + '&gt;';
+			}
+		" />
+
+		<hr/>
+
 		<h2>Try out Cross-document messaging using <tt>postMessage()</tt>:</h2>
 		<iframe src="http://same-origin-policy.com/post_message_partner.html" id="post_message_partner_iframe" width="700px" height="200px"></iframe><br/>
 		Send message: <input type="text" id="send_message" /><input type="button" value="Post message!" onclick="
